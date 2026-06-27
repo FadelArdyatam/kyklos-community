@@ -132,3 +132,4 @@ web/package-lock.json
 # impeccable
 .claude
 .gemini
+.impeccable
