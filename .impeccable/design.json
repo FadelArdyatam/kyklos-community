@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-27T17:40:00Z",
+  "title": "Design System: Kyklos Design System",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Indigo Trust", "canonical": "oklch(53% 0.24 263)", "tonalRamp": ["oklch(20% 0.1 263)", "oklch(30% 0.15 263)", "oklch(40% 0.2 263)", "oklch(53% 0.24 263)", "oklch(65% 0.2 263)", "oklch(75% 0.15 263)", "oklch(85% 0.1 263)", "oklch(95% 0.03 263)"] },
+      "neutral-bg": { "role": "neutral", "displayName": "Warm White", "canonical": "oklch(100% 0 0)", "tonalRamp": ["oklch(15% 0 0)", "oklch(30% 0 0)", "oklch(50% 0 0)", "oklch(70% 0 0)", "oklch(85% 0 0)", "oklch(90% 0 0)", "oklch(96% 0 0)", "oklch(100% 0 0)"] },
+      "neutral-fg": { "role": "neutral", "displayName": "Ink Black", "canonical": "oklch(20% 0 0)", "tonalRamp": ["oklch(15% 0 0)", "oklch(30% 0 0)", "oklch(50% 0 0)", "oklch(70% 0 0)", "oklch(85% 0 0)", "oklch(90% 0 0)", "oklch(96% 0 0)", "oklch(100% 0 0)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Judul halaman utama atau nilai saldo dominan." },
+      "headline": { "displayName": "Headline", "purpose": "Judul kartu kontainer atau kategori utama." },
+      "body": { "displayName": "Body", "purpose": "Teks deskripsi, keterangan, nama anggota." }
+    },
+    "shadows": [
+      { "name": "card-shadow", "value": "0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.06)", "purpose": "Memberikan kedalaman tipis pada kartu interaktif." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Transisi default untuk hover dan pergantian status." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Tombol aksi utama (misal: Buat, Simpan, Tambah).",
+      "html": "<button class=\"ds-btn-primary\">Buat Komunitas</button>",
+      "css": ".ds-btn-primary { background-color: #4F46E5; color: #ffffff; padding: 8px 16px; border-radius: 8px; font-weight: 500; font-size: 14px; border: none; transition: opacity 0.2s; cursor: pointer; } .ds-btn-primary:hover { opacity: 0.9; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Tombol aksi pembatalan atau pilihan kedua.",
+      "html": "<button class=\"ds-btn-secondary\">Batal</button>",
+      "css": ".ds-btn-secondary { background-color: transparent; color: #6b7280; padding: 8px 16px; border-radius: 8px; font-weight: 500; font-size: 14px; border: 1px solid #e5e7eb; transition: background-color 0.2s; cursor: pointer; } .ds-btn-secondary:hover { background-color: #f3f4f6; }"
+    },
+    {
+      "name": "Community Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Kartu konten utama untuk menampilkan ringkasan komunitas.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-avatar\">K</div><div class=\"ds-card-info\"><p class=\"ds-card-title\">Keluarga Cemara</p><p class=\"ds-card-desc\">5 anggota</p></div><span class=\"ds-card-arrow\">›</span></div>",
+      "css": ".ds-card { display: flex; align-items: center; gap: 16px; background-color: #ffffff; border-radius: 16px; padding: 16px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.06); transition: box-shadow 0.2s; cursor: pointer; } .ds-card:hover { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); } .ds-card-avatar { width: 48px; height: 48px; border-radius: 12px; background-color: #4F46E5; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; } .ds-card-info { flex: 1; min-width: 0; } .ds-card-title { font-weight: 600; font-size: 14px; margin: 0; color: #171717; } .ds-card-desc { font-size: 14px; color: #6b7280; margin: 4px 0 0 0; } .ds-card-arrow { color: #d1d5db; font-size: 18px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Friendly Local Ledger",
+    "overview": "Sistem desain Kyklos dirancang untuk menghadirkan rasa percaya, kehangatan, dan kesederhanaan bagi komunitas lokal di Indonesia. Pengguna kami meliputi anggota berbagai rentang usia, dari anak muda hingga orang tua, sehingga antarmuka harus meminimalkan beban kognitif dan memaksimalkan keterbacaan.",
+    "keyCharacteristics": [
+      "Ramah & Komunal: Sudut elemen yang membulat lembut (rounded-2xl atau 16px) memberikan kesan bersahabat.",
+      "Keterbacaan Utama: Angka saldo dan mutasi dana disajikan dengan ukuran yang dominan dan kontras tinggi.",
+      "Interaksi Pasti: Setiap aksi memiliki umpan balik visual instan (transisi halus pada hover/tap)."
+    ],
+    "rules": [
+      { "name": "The Community Color Rule", "body": "Warna primer dapat digantikan oleh --community-primary untuk whitelabeling identitas komunitas, namun kontras teks terhadap warna tersebut harus selalu dipertahankan >= 4.5:1.", "section": "colors" },
+      { "name": "The Interaction Shadow Rule", "body": "Bayangan kartu hanya boleh meningkat tipis pada interaksi hover/focus sebagai umpan balik visual bahwa elemen tersebut dapat diklik.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do berikan label yang jelas pada setiap angka nominal keuangan (misal: 'Total Saldo Komunitas', 'Pemasukan', 'Pengeluaran').",
+      "Do gunakan sudut 16px (rounded-2xl) untuk kartu utama dan 8px (rounded-lg) untuk tombol dan input."
+    ],
+    "donts": [
+      "Don't menggunakan gradient teks atau efek glassmorphism yang mengurangi kontras teks keuangan.",
+      "Don't menampilkan tabel dengan kolom yang sangat padat dan rapat yang membingungkan bagi pengguna non-teknis."
+    ]
+  }
+}

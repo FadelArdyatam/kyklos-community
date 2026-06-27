@@ -29,8 +29,9 @@ export default function ArisanPage() {
       ]);
     }).then(res => {
       if (!res) return;
-      setParticipants(res[0]);
-      setPeriods(res[1]);
+      const [parts, pers] = res as [Participant[], Period[]];
+      setParticipants(parts);
+      setPeriods(pers);
     }).catch(() => router.push('/login'));
   }, [slug, router]);
 

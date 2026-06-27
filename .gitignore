@@ -128,3 +128,7 @@ prisma/data.db-journal
 /docs
 
 web/package-lock.json
+
+# impeccable
+.claude
+.gemini

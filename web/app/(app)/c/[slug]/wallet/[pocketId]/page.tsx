@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { api } from '@/lib/api';
 import { idr, relativeTime } from '@/lib/format';
 
@@ -61,35 +62,10 @@ export default function PocketLedger() {
       )}
 
       {isAdmin && (
-        <div>
-          {!showForm ? (
-            <button onClick={() => setShowForm(true)}
-              className="w-full border-2 border-dashed border-gray-200 rounded-xl py-3 text-gray-400 hover:border-indigo-300 hover:text-indigo-500 transition text-sm">
-              + Catat Transaksi
-            </button>
-          ) : (
-            <form onSubmit={recordTxn} className="bg-white rounded-2xl shadow p-4 space-y-3">
-              <div className="flex gap-2">
-                {['in', 'out'].map(d => (
-                  <button type="button" key={d} onClick={() => setForm(f => ({ ...f, direction: d }))}
-                    className={`flex-1 py-2 rounded-lg text-sm font-medium border transition ${form.direction === d ? (d === 'in' ? 'bg-green-500 text-white border-green-500' : 'bg-red-500 text-white border-red-500') : 'border-gray-200 text-gray-500'}`}>
-                    {d === 'in' ? '↑ Pemasukan' : '↓ Pengeluaran'}
-                  </button>
-                ))}
-              </div>
-              <input type="number" required placeholder="Jumlah (Rp)" value={form.amount}
-                onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-              <input placeholder="Keterangan" value={form.note}
-                onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-              <div className="flex gap-2">
-                <button type="button" onClick={() => setShowForm(false)} className="flex-1 border rounded-lg py-2 text-sm text-gray-500">Batal</button>
-                <button type="submit" className="flex-1 bg-indigo-600 text-white rounded-lg py-2 text-sm font-medium">Simpan</button>
-              </div>
-            </form>
-          )}
-        </div>
+        <Link href={`/c/${slug}/wallet/new?pocketId=${pocketId}`}
+          className="block w-full text-center border-2 border-dashed border-gray-200 rounded-xl py-3 text-gray-400 hover:border-indigo-300 hover:text-indigo-500 transition text-sm font-semibold bg-white cursor-pointer shadow-sm">
+          + Catat Transaksi
+        </Link>
       )}
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">

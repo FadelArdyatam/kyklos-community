@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { api } from '@/lib/api';
 import { getMe } from '@/lib/auth';
 import { idr, relativeTime } from '@/lib/format';
@@ -36,6 +37,10 @@ export default function WalletPage() {
   const [tab, setTab] = useState<'ledger' | 'status'>('status');
   const [myId, setMyId] = useState('');
   const [payConfig, setPayConfig] = useState<{ method: string } | null>(null);
+
+  // Periksa apakah user login adalah pengurus/admin
+  const myMembership = data?.members?.find(m => m.userId === myId || m.user?.id === myId);
+  const isAdmin = myMembership?.role === 'admin';
 
   const load = useCallback(() => {
     getMe().then(me => me && setMyId(me.id));
@@ -153,9 +158,17 @@ export default function WalletPage() {
 
       {tab === 'ledger' && (
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="px-4 py-3 border-b">
-            <h3 className="font-semibold text-sm">Buku Kas (Ledger)</h3>
-            <p className="text-xs text-gray-400">Append-only · tidak bisa dihapus</p>
+          <div className="px-4 py-3 border-b flex justify-between items-center">
+            <div>
+              <h3 className="font-semibold text-sm">Buku Kas (Ledger)</h3>
+              <p className="text-xs text-gray-400">Append-only · tidak bisa dihapus</p>
+            </div>
+            {isAdmin && (
+              <Link href={`/c/${slug}/wallet/new`}
+                className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg font-bold transition shadow-sm cursor-pointer">
+                + Transaksi Baru
+              </Link>
+            )}
           </div>
           {data.recentTransactions.length === 0 && (
             <p className="text-gray-400 text-sm p-4">Belum ada transaksi</p>

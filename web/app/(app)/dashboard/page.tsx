@@ -7,7 +7,7 @@ import { getMe, logout } from '@/lib/auth';
 
 interface Community { id: string; name: string; slug: string; themeColor: string; logoUrl?: string; _count: { memberships: number } }
 
-export default function HomePage() {
+export default function DashboardPage() {
   const router = useRouter();
   const [communities, setCommunities] = useState<Community[]>([]);
   const [user, setUser] = useState<{ name: string } | null>(null);
