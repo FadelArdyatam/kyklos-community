@@ -126,3 +126,5 @@ prisma/data.db-journal
 # Vercel
 .vercel
 /docs
+
+web/package-lock.json
