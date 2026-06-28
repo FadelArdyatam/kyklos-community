@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 
@@ -40,6 +40,12 @@ export default function SettingsPage() {
     // States untuk Tema
     const [selectedThemeColor, setSelectedThemeColor] = useState('#0F3A4B');
 
+    // Avatar
+    const [avatarUrl, setAvatarUrl] = useState<string>('');
+    const [avatarPreview, setAvatarPreview] = useState<string>('');
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const avatarInputRef = useRef<HTMLInputElement>(null);
+
     // States untuk Status Transaksi
     const [savedProfile, setSavedProfile] = useState(false);
     const [savedBank, setSavedBank] = useState(false);
@@ -57,8 +63,18 @@ export default function SettingsPage() {
         // Load Profile
         const storedProfile = localStorage.getItem('kyklos_user_profile');
         if (storedProfile) {
-            try { setProfileForm(JSON.parse(storedProfile)); } catch {}
+            try {
+                const parsed = JSON.parse(storedProfile);
+                setProfileForm(parsed);
+                if (parsed.avatarUrl) setAvatarUrl(parsed.avatarUrl);
+            } catch {}
         }
+
+        // Load avatar dari backend
+        api.get<any>('/auth/me').then(me => {
+            if (me?.avatarUrl) setAvatarUrl(me.avatarUrl);
+            if (me?.name) setProfileForm(f => ({ ...f, name: me.name, email: me.email || f.email }));
+        }).catch(() => {});
 
         // Load Bank & Theme Config
         api.get<any[]>('/communities').then(list => {
@@ -91,17 +107,56 @@ export default function SettingsPage() {
         }).catch(() => router.push('/login'));
     }, [slug, router]);
 
+    // Upload Avatar
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Local preview immediately
+        const reader = new FileReader();
+        reader.onload = ev => setAvatarPreview(ev.target?.result as string);
+        reader.readAsDataURL(file);
+
+        setUploadingAvatar(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('folder', 'kyklos/avatars');
+
+            const token = localStorage.getItem('kyklos_token');
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/upload`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData,
+            });
+            const data = await res.json();
+            if (!data.url) throw new Error('Upload gagal');
+
+            // Simpan URL ke backend & lokal
+            await api.patch('/auth/profile', { avatarUrl: data.url });
+            setAvatarUrl(data.url);
+            setAvatarPreview('');
+            const storedProfile = localStorage.getItem('kyklos_user_profile');
+            const parsed = storedProfile ? JSON.parse(storedProfile) : profileForm;
+            localStorage.setItem('kyklos_user_profile', JSON.stringify({ ...parsed, avatarUrl: data.url }));
+            window.dispatchEvent(new Event('storage'));
+        } catch (err: any) {
+            alert(err.message || 'Gagal mengupload foto profil.');
+            setAvatarPreview('');
+        } finally {
+            setUploadingAvatar(false);
+            if (avatarInputRef.current) avatarInputRef.current.value = '';
+        }
+    };
+
     // Simpan Profile
     const handleSaveProfile = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         try {
             await api.patch('/auth/profile', { name: profileForm.name });
-            localStorage.setItem('kyklos_user_profile', JSON.stringify(profileForm));
-            // Sinkronisasi data ke navbar utama
-            const event = new Event('storage');
-            window.dispatchEvent(event);
-            
+            localStorage.setItem('kyklos_user_profile', JSON.stringify({ ...profileForm, avatarUrl }));
+            window.dispatchEvent(new Event('storage'));
             setSavedProfile(true);
             setTimeout(() => setSavedProfile(false), 3000);
         } catch (err) {
@@ -279,16 +334,50 @@ export default function SettingsPage() {
                             {/* Avatar Circle */}
                             <div className="flex flex-col items-center justify-center py-2 select-none">
                                 <div className="relative">
-                                    <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center text-white text-3xl font-bold font-sans select-none">
-                                        {profileForm.name ? profileForm.name[0].toUpperCase() : 'U'}
-                                    </div>
-                                    <button type="button" className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-slate-50 cursor-pointer transition">
-                                        <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
+                                    {/* Hidden file input */}
+                                    <input
+                                        ref={avatarInputRef}
+                                        type="file"
+                                        accept="image/png, image/jpeg, image/webp"
+                                        className="hidden"
+                                        onChange={handleAvatarChange}
+                                    />
+                                    {/* Avatar display */}
+                                    {(avatarPreview || avatarUrl) ? (
+                                        <img
+                                            src={avatarPreview || avatarUrl}
+                                            alt="Avatar"
+                                            className="w-24 h-24 rounded-full object-cover border-2 border-white shadow-md"
+                                        />
+                                    ) : (
+                                        <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center text-white text-3xl font-bold">
+                                            {profileForm.name ? profileForm.name[0].toUpperCase() : 'U'}
+                                        </div>
+                                    )}
+                                    {/* Camera button */}
+                                    <button
+                                        type="button"
+                                        onClick={() => avatarInputRef.current?.click()}
+                                        disabled={uploadingAvatar}
+                                        className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-slate-50 cursor-pointer transition disabled:opacity-60"
+                                        title="Ganti foto profil"
+                                    >
+                                        {uploadingAvatar ? (
+                                            <svg className="w-4 h-4 text-primary animate-spin" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                                            </svg>
+                                        ) : (
+                                            <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                        )}
                                     </button>
                                 </div>
+                                {uploadingAvatar && (
+                                    <p className="text-[10px] text-gray-400 font-semibold mt-2">Mengunggah foto...</p>
+                                )}
                             </div>
 
                             {/* Fields */}

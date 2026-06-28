@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { CommunityContext } from '../layout';
 
 export default function ArisanPage() {
     const [slug, setSlug] = useState('keluarga-cemara');
@@ -18,6 +19,8 @@ export default function ArisanPage() {
     const [newMemberId, setNewMemberId] = useState('');
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+
+    const { role } = useContext(CommunityContext);
 
     useEffect(() => {
         const activeSlug = localStorage.getItem('kyklos_active_community_slug') || 'keluarga-cemara';
@@ -128,20 +131,22 @@ export default function ArisanPage() {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <button 
-                        onClick={() => setShowManageModal(true)}
-                        className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-xl text-xs font-bold text-slate-700 hover:bg-gray-50 transition shadow-sm bg-white cursor-pointer"
-                    >
-                        Manage Members
-                    </button>
-                    <button 
-                        onClick={() => setShowPayoutModal(true)}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:brightness-90 hover:shadow-md transition shadow-sm cursor-pointer"
-                    >
-                        Execute Draw / Payout
-                    </button>
-                </div>
+                {role === 'admin' && (
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={() => setShowManageModal(true)}
+                            className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-xl text-xs font-bold text-slate-700 hover:bg-gray-50 transition shadow-sm bg-white cursor-pointer"
+                        >
+                            Manage Members
+                        </button>
+                        <button 
+                            onClick={() => setShowPayoutModal(true)}
+                            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:brightness-90 hover:shadow-md transition shadow-sm cursor-pointer"
+                        >
+                            Execute Draw / Payout
+                        </button>
+                    </div>
+                )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

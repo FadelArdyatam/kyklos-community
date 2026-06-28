@@ -20,7 +20,10 @@ export class CommunitiesService {
     this.logger.debug(`Fetching communities for user ${userId}`);
     return this.prisma.community.findMany({
       where: { memberships: { some: { userId, status: 'active' } } },
-      include: { _count: { select: { memberships: true } } },
+      include: { 
+        _count: { select: { memberships: true } },
+        memberships: { where: { userId }, select: { role: true } }
+      },
     });
   }
 

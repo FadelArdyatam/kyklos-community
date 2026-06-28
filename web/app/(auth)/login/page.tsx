@@ -29,12 +29,8 @@ export default function HalamanLogin() {
         
         try {
             await login(formulirMasuk.email, formulirMasuk.kataSandi);
-            // Ambil daftar komunitas langsung setelah login dan simpan slug aktif ke localStorage
-            const daftarKomunitas = await api.get<any[]>('/communities');
-            if (daftarKomunitas && daftarKomunitas.length > 0) {
-                localStorage.setItem('kyklos_active_community_slug', daftarKomunitas[0].slug);
-            }
-            pengarahRute.push('/dashboard');
+            // Jangan langsung set active community, arahkan ke halaman pilih komunitas
+            pengarahRute.push('/selector');
         } catch (kesalahan: any) {
             setPesanKesalahan(kesalahan.message || 'Gagal masuk. Silakan periksa kembali email dan kata sandi Anda.');
         } finally {
@@ -52,11 +48,8 @@ export default function HalamanLogin() {
             
             await loginWithGoogle(idToken);
             
-            const daftarKomunitas = await api.get<any[]>('/communities');
-            if (daftarKomunitas && daftarKomunitas.length > 0) {
-                localStorage.setItem('kyklos_active_community_slug', daftarKomunitas[0].slug);
-            }
-            pengarahRute.push('/dashboard');
+            // Jangan langsung set active community, arahkan ke halaman pilih komunitas
+            pengarahRute.push('/selector');
         } catch (error: any) {
             setPesanKesalahan(error.message || 'Gagal masuk dengan Google.');
         } finally {

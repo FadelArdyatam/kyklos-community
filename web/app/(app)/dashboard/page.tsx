@@ -1,10 +1,11 @@
 'use client';
  
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { idr } from '@/lib/format';
+import { CommunityContext } from '../layout';
 
 interface DashboardData {
     totalBalance: string;
@@ -35,6 +36,8 @@ export default function DashboardPage() {
     const [communityId, setCommunityId] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(true);
     const [verifyingId, setVerifyingId] = useState<string | null>(null);
+
+    const { role } = useContext(CommunityContext);
 
     // Ambil active slug dari localStorage
     useEffect(() => {
@@ -156,33 +159,35 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Action Required Card */}
-                <div className="bg-primary rounded-2xl p-6 shadow-sm flex flex-col justify-between text-white">
-                    <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-xs font-bold text-white/80 uppercase tracking-wider">
-                            <svg className="w-4 h-4 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                            </svg>
-                            Action Required
+                {/* Action Required Card - Admin Only */}
+                {role === 'admin' && (
+                    <div className="bg-primary rounded-2xl p-6 shadow-sm flex flex-col justify-between text-white">
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2 text-xs font-bold text-white/80 uppercase tracking-wider">
+                                <svg className="w-4 h-4 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                </svg>
+                                Action Required
+                            </div>
+                            <h3 className="font-serif text-2xl font-bold tracking-tight text-white leading-tight">
+                                {data.pendingVerifications?.length ?? 0} Verifications Pending
+                            </h3>
+                            <p className="text-xs text-white/70 leading-relaxed">
+                                Requires immediate attention before end of month.
+                            </p>
                         </div>
-                        <h3 className="font-serif text-2xl font-bold tracking-tight text-white leading-tight">
-                            {data.pendingVerifications?.length ?? 0} Verifications Pending
-                        </h3>
-                        <p className="text-xs text-white/70 leading-relaxed">
-                            Requires immediate attention before end of month.
-                        </p>
-                    </div>
 
-                    <button 
-                        onClick={() => {
-                            const element = document.getElementById('pending-verifications');
-                            if (element) element.scrollIntoView({ behavior: 'smooth' });
-                        }}
-                        className="w-full mt-6 py-2.5 bg-white hover:bg-gray-50 text-primary font-bold rounded-xl text-xs transition duration-200 cursor-pointer text-center select-none"
-                    >
-                        Review Now
-                    </button>
-                </div>
+                        <button 
+                            onClick={() => {
+                                const element = document.getElementById('pending-verifications');
+                                if (element) element.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                            className="w-full mt-6 py-2.5 bg-white hover:bg-gray-50 text-primary font-bold rounded-xl text-xs transition duration-200 cursor-pointer text-center select-none"
+                        >
+                            Review Now
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Bagian Active Pockets */}
@@ -233,82 +238,84 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* Bagian Pending Verifications */}
-            <div id="pending-verifications" className="space-y-4 pt-2">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Pending Verifications</h2>
-                    <Link href="/ledger" className="text-xs font-bold text-[#0284C7] hover:text-[#0369a1]">
-                        View All
-                    </Link>
-                </div>
+            {/* Bagian Pending Verifications - Admin Only */}
+            {role === 'admin' && (
+                <div id="pending-verifications" className="space-y-4 pt-2">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Pending Verifications</h2>
+                        <Link href="/ledger" className="text-xs font-bold text-[#0284C7] hover:text-[#0369a1]">
+                            View All
+                        </Link>
+                    </div>
 
-                <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="border-b border-gray-100 bg-gray-50/50 text-[10px] font-bold text-gray-400 uppercase tracking-wider select-none">
-                                    <th className="px-6 py-4">Member</th>
-                                    <th className="px-6 py-4">Date</th>
-                                    <th className="px-6 py-4">Amount</th>
-                                    <th className="px-6 py-4">Pocket</th>
-                                    <th className="px-6 py-4 text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50">
-                                {(!data.pendingVerifications || data.pendingVerifications.length === 0) ? (
-                                    <tr>
-                                        <td colSpan={5} className="px-6 py-10 text-center text-xs text-gray-400 font-medium">
-                                            Semua iuran terverifikasi! Tidak ada verifikasi tertunda.
-                                        </td>
+                    <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-gray-100 bg-gray-50/50 text-[10px] font-bold text-gray-400 uppercase tracking-wider select-none">
+                                        <th className="px-6 py-4">Member</th>
+                                        <th className="px-6 py-4">Date</th>
+                                        <th className="px-6 py-4">Amount</th>
+                                        <th className="px-6 py-4">Pocket</th>
+                                        <th className="px-6 py-4 text-right">Action</th>
                                     </tr>
-                                ) : (
-                                    data.pendingVerifications.map((item) => (
-                                        <tr key={item.id} className="hover:bg-gray-50/30 transition-all duration-200">
-                                            {/* Kolom Member */}
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-8 h-8 rounded-full ${item.member.color || 'bg-slate-800'} text-white font-bold text-[11px] flex items-center justify-center flex-shrink-0 shadow-inner select-none`}>
-                                                        {item.member.avatar}
-                                                    </div>
-                                                    <span className="text-xs font-bold text-slate-800">{item.member.name}</span>
-                                                </div>
-                                            </td>
-                                            {/* Kolom Date */}
-                                            <td className="px-6 py-4 text-xs font-medium text-gray-400">
-                                                {item.date}
-                                            </td>
-                                            {/* Kolom Amount */}
-                                            <td className="px-6 py-4 text-xs font-extrabold text-slate-800">
-                                                {idr(item.amount)}
-                                            </td>
-                                            {/* Kolom Pocket */}
-                                            <td className="px-6 py-4">
-                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                                                    item.pocket === 'Arisan Bulanan'
-                                                        ? 'bg-orange-50 text-primary'
-                                                        : 'bg-[#E0F2FE]/50 text-[#0284C7]'
-                                                }`}>
-                                                    {item.pocket}
-                                                </span>
-                                            </td>
-                                            {/* Kolom Aksi */}
-                                            <td className="px-6 py-4 text-right">
-                                                <button
-                                                    onClick={() => handleVerify(item.id)}
-                                                    disabled={verifyingId === item.id}
-                                                    className="px-4 py-1.5 border border-[#0284C7]/20 rounded-lg text-xs font-semibold text-[#0284C7] hover:bg-sky-50/50 hover:border-[#0284C7]/50 transition duration-150 bg-white cursor-pointer select-none disabled:opacity-60"
-                                                >
-                                                    {verifyingId === item.id ? '...' : 'Verify'}
-                                                </button>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {(!data.pendingVerifications || data.pendingVerifications.length === 0) ? (
+                                        <tr>
+                                            <td colSpan={5} className="px-6 py-10 text-center text-xs text-gray-400 font-medium">
+                                                Semua iuran terverifikasi! Tidak ada verifikasi tertunda.
                                             </td>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                                    ) : (
+                                        data.pendingVerifications.map((item) => (
+                                            <tr key={item.id} className="hover:bg-gray-50/30 transition-all duration-200">
+                                                {/* Kolom Member */}
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-8 h-8 rounded-full ${item.member.color || 'bg-slate-800'} text-white font-bold text-[11px] flex items-center justify-center flex-shrink-0 shadow-inner select-none`}>
+                                                            {item.member.avatar}
+                                                        </div>
+                                                        <span className="text-xs font-bold text-slate-800">{item.member.name}</span>
+                                                    </div>
+                                                </td>
+                                                {/* Kolom Date */}
+                                                <td className="px-6 py-4 text-xs font-medium text-gray-400">
+                                                    {item.date}
+                                                </td>
+                                                {/* Kolom Amount */}
+                                                <td className="px-6 py-4 text-xs font-extrabold text-slate-800">
+                                                    {idr(item.amount)}
+                                                </td>
+                                                {/* Kolom Pocket */}
+                                                <td className="px-6 py-4">
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                                                        item.pocket === 'Arisan Bulanan'
+                                                            ? 'bg-orange-50 text-primary'
+                                                            : 'bg-[#E0F2FE]/50 text-[#0284C7]'
+                                                    }`}>
+                                                        {item.pocket}
+                                                    </span>
+                                                </td>
+                                                {/* Kolom Aksi */}
+                                                <td className="px-6 py-4 text-right">
+                                                    <button
+                                                        onClick={() => handleVerify(item.id)}
+                                                        disabled={verifyingId === item.id}
+                                                        className="px-4 py-1.5 border border-[#0284C7]/20 rounded-lg text-xs font-semibold text-[#0284C7] hover:bg-sky-50/50 hover:border-[#0284C7]/50 transition duration-150 bg-white cursor-pointer select-none disabled:opacity-60"
+                                                    >
+                                                        {verifyingId === item.id ? '...' : 'Verify'}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

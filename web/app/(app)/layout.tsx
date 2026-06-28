@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+
+export const CommunityContext = React.createContext<{ role: string; communityId: string }>({ role: 'member', communityId: '' });
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { getMe, logout } from '@/lib/auth';
@@ -19,6 +21,7 @@ function CommunityLayoutContent({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const [slug, setSlug] = useState('keluarga-cemara');
     const [community, setCommunity] = useState<Community | null>(null);
+    const [userRole, setUserRole] = useState<string>('member');
     const [user, setUser] = useState<{ name: string; email: string } | null>(null);
     const [showUserPopover, setShowUserPopover] = useState(false);
     const [profileForm, setProfileForm] = useState({
@@ -58,13 +61,16 @@ function CommunityLayoutContent({ children }: { children: React.ReactNode }) {
         });
 
         // Ambil data komunitas berdasarkan slug
-        api.get<Community[]>('/communities').then(list => {
+        api.get<any[]>('/communities').then(list => {
             const c = list.find(x => x.slug === slug) || list[0];
             if (!c) {
                 router.push('/login');
                 return;
             }
             setCommunity(c);
+            if (c.memberships && c.memberships.length > 0) {
+                setUserRole(c.memberships[0].role);
+            }
             // Simpan variabel CSS untuk theming dinamis
             document.documentElement.style.setProperty('--community-primary', c.themeColor);
         }).catch(() => router.push('/login'));
@@ -207,17 +213,19 @@ function CommunityLayoutContent({ children }: { children: React.ReactNode }) {
                                 
                                 {/* Menu Items */}
                                 <div className="flex flex-col gap-0.5">
-                                    <Link 
-                                        href="/settings" 
-                                        onClick={() => setShowUserPopover(false)}
-                                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-950 transition cursor-pointer"
-                                    >
-                                        <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                        <span>Pengaturan</span>
-                                    </Link>
+                                    {userRole === 'admin' && (
+                                        <Link 
+                                            href="/settings" 
+                                            onClick={() => setShowUserPopover(false)}
+                                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-950 transition cursor-pointer"
+                                        >
+                                            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                            <span>Pengaturan</span>
+                                        </Link>
+                                    )}
                                     
                                     <button 
                                         onClick={() => {
@@ -253,7 +261,11 @@ function CommunityLayoutContent({ children }: { children: React.ReactNode }) {
                         <div>
                             <Link href="/dashboard" className="block select-none">
                                 <h2 className="font-serif font-bold text-slate-800 tracking-tight leading-tight text-[15px]">{community.name}</h2>
-                                <p className="text-[10px] text-gray-400 font-semibold tracking-wide mt-0.5">Transparent Management</p>
+                                <div className="mt-1">
+                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${userRole === 'admin' ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-500'}`}>
+                                        {userRole === 'admin' ? 'Admin' : 'Member'}
+                                    </span>
+                                </div>
                             </Link>
                         </div>
                     </div>
@@ -289,20 +301,22 @@ function CommunityLayoutContent({ children }: { children: React.ReactNode }) {
                     {/* Bottom Navigation */}
                     <div className="px-3 py-4 border-t border-gray-100 space-y-1">
                         {/* Settings Button */}
-                        <Link 
-                            href="/settings" 
-                            className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                                pathname === '/settings'
-                                    ? 'bg-primary/10 text-primary'
-                                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                            }`}
-                        >
-                            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <span>Settings</span>
-                        </Link>
+                        {userRole === 'admin' && (
+                            <Link 
+                                href="/settings" 
+                                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                                    pathname === '/settings'
+                                        ? 'bg-primary/10 text-primary'
+                                        : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                                }`}
+                            >
+                                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <span>Settings</span>
+                            </Link>
+                        )}
                         {/* Help Button */}
                         <a href="#help" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-all">
                             <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -332,7 +346,9 @@ function CommunityLayoutContent({ children }: { children: React.ReactNode }) {
                                 </div>
                                 <div className="min-w-0">
                                     <span className="font-serif font-black text-slate-900 text-[13px] block tracking-tight truncate leading-none">{community.name}</span>
-                                    <span className="text-[9px] text-slate-400 font-bold block mt-1 tracking-wider uppercase">Kyklos</span>
+                                    <span className={`inline-block mt-1 text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${userRole === 'admin' ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-500'}`}>
+                                        {userRole === 'admin' ? 'Admin' : 'Member'}
+                                    </span>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -367,17 +383,19 @@ function CommunityLayoutContent({ children }: { children: React.ReactNode }) {
                                                 
                                                 {/* Menu Items */}
                                                 <div className="flex flex-col gap-0.5">
-                                                    <Link 
-                                                        href="/settings" 
-                                                        onClick={() => setShowUserPopover(false)}
-                                                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-950 transition cursor-pointer"
-                                                    >
-                                                        <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                        </svg>
-                                                        <span>Pengaturan</span>
-                                                    </Link>
+                                                    {userRole === 'admin' && (
+                                                        <Link 
+                                                            href="/settings" 
+                                                            onClick={() => setShowUserPopover(false)}
+                                                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-950 transition cursor-pointer"
+                                                        >
+                                                            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            </svg>
+                                                            <span>Pengaturan</span>
+                                                        </Link>
+                                                    )}
                                                     <button 
                                                         onClick={() => {
                                                             setShowUserPopover(false);
@@ -426,7 +444,9 @@ function CommunityLayoutContent({ children }: { children: React.ReactNode }) {
                     {/* Area Konten Utama Halaman (Layout Responsive) */}
                     <main className="flex-1">
                         <div className="max-w-lg mx-auto px-4 py-4 md:max-w-full md:px-8 md:py-6">
-                            {children}
+                            <CommunityContext.Provider value={{ role: userRole, communityId: community?.id || '' }}>
+                                {children}
+                            </CommunityContext.Provider>
                         </div>
                     </main>
                 </div>

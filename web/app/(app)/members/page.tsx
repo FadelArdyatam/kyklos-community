@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { CommunityContext } from '../layout';
 
 interface MemberUser {
     id: string;
@@ -33,6 +34,8 @@ export default function MembersPage() {
     const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [errorMsg, setErrorMsg] = useState('');
+
+    const { role: currentUserRole } = useContext(CommunityContext);
 
     const [inviteForm, setInviteForm] = useState({
         email: '',
@@ -121,15 +124,17 @@ export default function MembersPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button 
-                        onClick={() => setShowInviteModal(true)}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:brightness-90 hover:shadow-md transition shadow-sm cursor-pointer select-none"
-                    >
-                        <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                        </svg>
-                        Invite Member
-                    </button>
+                    {currentUserRole === 'admin' && (
+                        <button 
+                            onClick={() => setShowInviteModal(true)}
+                            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:brightness-90 hover:shadow-md transition shadow-sm cursor-pointer select-none"
+                        >
+                            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                            </svg>
+                            Invite Member
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -179,7 +184,7 @@ export default function MembersPage() {
                                 <th className="px-6 py-4">Resident</th>
                                 <th className="px-6 py-4">Role</th>
                                 <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4 text-center">Actions</th>
+                                {currentUserRole === 'admin' && <th className="px-6 py-4 text-center">Actions</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
@@ -226,29 +231,31 @@ export default function MembersPage() {
                                                     {m.status}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-3.5 text-center relative">
-                                                <button 
-                                                    onClick={() => setActiveMenuId(activeMenuId === m.id ? null : m.id)}
-                                                    className="p-1.5 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-slate-700 transition cursor-pointer select-none"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                                                    </svg>
-                                                </button>
-                                                {activeMenuId === m.id && (
-                                                    <div className="absolute right-12 top-2 z-10 bg-white border border-gray-150 rounded-xl shadow-lg p-1.5 w-24 text-left animate-scale-up">
-                                                        <button 
-                                                            onClick={() => handleDeleteMember(m.id)}
-                                                            className="w-full text-left px-2.5 py-1.5 hover:bg-rose-50 text-rose-600 rounded-lg text-[10px] font-bold transition flex items-center gap-1 cursor-pointer select-none"
-                                                        >
-                                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                            </svg>
-                                                            Hapus
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </td>
+                                            {currentUserRole === 'admin' && (
+                                                <td className="px-6 py-3.5 text-center relative">
+                                                    <button 
+                                                        onClick={() => setActiveMenuId(activeMenuId === m.id ? null : m.id)}
+                                                        className="p-1.5 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-slate-700 transition cursor-pointer select-none"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                                        </svg>
+                                                    </button>
+                                                    {activeMenuId === m.id && (
+                                                        <div className="absolute right-12 top-2 z-10 bg-white border border-gray-150 rounded-xl shadow-lg p-1.5 w-24 text-left animate-scale-up">
+                                                            <button 
+                                                                onClick={() => handleDeleteMember(m.id)}
+                                                                className="w-full text-left px-2.5 py-1.5 hover:bg-rose-50 text-rose-600 rounded-lg text-[10px] font-bold transition flex items-center gap-1 cursor-pointer select-none"
+                                                            >
+                                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                </svg>
+                                                                Hapus
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </td>
+                                            )}
                                         </tr>
                                     );
                                 })
