@@ -31,7 +31,7 @@ export class ContributionsService {
     return this.prisma.contribution.findMany({
       where: { communityId },
       include: {
-        member: { select: { id: true, name: true, email: true } },
+        member: { select: { id: true, name: true, email: true, avatarUrl: true } },
         schedule: { select: { title: true } },
       },
       orderBy: { createdAt: 'desc' },

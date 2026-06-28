@@ -205,9 +205,17 @@ export default function MembersPage() {
                                         <tr key={m.id} className="hover:bg-gray-50/30 transition duration-150 relative">
                                             <td className="px-6 py-3.5">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`w-9 h-9 rounded-full bg-slate-200 font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-inner`}>
-                                                        {m.user.name?.[0]?.toUpperCase() ?? 'U'}
-                                                    </div>
+                                                    {m.user.avatarUrl ? (
+                                                        <img
+                                                            src={m.user.avatarUrl}
+                                                            alt={m.user.name}
+                                                            className="w-9 h-9 rounded-full object-cover shadow-inner flex-shrink-0"
+                                                        />
+                                                    ) : (
+                                                        <div className={`w-9 h-9 rounded-full bg-slate-200 font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-inner`}>
+                                                            {m.user.name?.[0]?.toUpperCase() ?? 'U'}
+                                                        </div>
+                                                    )}
                                                     <div className="min-w-0">
                                                         <p className="text-xs font-bold text-slate-800 leading-tight">{m.user.name}</p>
                                                         <p className="text-[10px] text-gray-400 font-medium mt-0.5">{m.user.email}</p>

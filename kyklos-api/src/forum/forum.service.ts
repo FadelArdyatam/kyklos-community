@@ -12,7 +12,7 @@ export class ForumService {
     return this.prisma.post.findMany({
       where: { communityId },
       include: {
-        author: { select: { id: true, name: true } },
+        author: { select: { id: true, name: true, avatarUrl: true } },
         _count: { select: { comments: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -23,7 +23,7 @@ export class ForumService {
     this.logger.log(`New post by ${authorId} in community ${communityId} (announcement=${isAnnouncement})`);
     return this.prisma.post.create({
       data: { communityId, authorId, body, isAnnouncement },
-      include: { author: { select: { id: true, name: true } } },
+      include: { author: { select: { id: true, name: true, avatarUrl: true } } },
     });
   }
 
@@ -31,7 +31,7 @@ export class ForumService {
     this.logger.debug(`Fetching comments for post ${postId}`);
     return this.prisma.comment.findMany({
       where: { postId },
-      include: { author: { select: { id: true, name: true } } },
+      include: { author: { select: { id: true, name: true, avatarUrl: true } } },
       orderBy: { createdAt: 'asc' },
     });
   }
@@ -40,7 +40,7 @@ export class ForumService {
     this.logger.log(`New comment by ${authorId} on post ${postId}`);
     return this.prisma.comment.create({
       data: { postId, communityId, authorId, body },
-      include: { author: { select: { id: true, name: true } } },
+      include: { author: { select: { id: true, name: true, avatarUrl: true } } },
     });
   }
 

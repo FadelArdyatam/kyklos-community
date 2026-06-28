@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { api } from '@/lib/api';
 import { idr } from '@/lib/format';
+import { CommunityContext } from '../layout';
 
 interface TopUp {
     id: string;
@@ -21,6 +22,7 @@ interface Withdrawal {
 }
 
 export default function WalletPage() {
+    const { role } = useContext(CommunityContext);
     const [balance, setBalance] = useState<number>(0);
     const [topups, setTopups] = useState<TopUp[]>([]);
     const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
@@ -57,13 +59,8 @@ export default function WalletPage() {
     const handleTopup = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const res = await api.post<any>('/wallet/topup', { amount: parseFloat(topupForm.amount) });
-            if (res.token) {
-                // If midtrans is integrated, we would show snap here
-                alert('Top up request created. Status is pending (Mock integration).');
-            } else {
-                alert('Top up successful (Mocked fallback).');
-            }
+            await api.post<any>('/wallet/topup', { amount: parseFloat(topupForm.amount) });
+            alert('Top Up Berhasil! Uang kas disimulasikan masuk ke rekening bank komunitas.');
             setShowTopupModal(false);
             setTopupForm({ amount: '' });
             loadData();
@@ -94,8 +91,8 @@ export default function WalletPage() {
         <div className="space-y-6 relative">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="space-y-1">
-                    <h1 className="font-serif text-3xl font-black text-slate-800 tracking-tight">Personal Wallet</h1>
-                    <p className="text-xs sm:text-sm text-gray-400 font-semibold">Manage your personal funds, top up balance, and withdraw money.</p>
+                    <h1 className="font-serif text-3xl font-black text-slate-800 tracking-tight">Community Wallet</h1>
+                    <p className="text-xs sm:text-sm text-gray-400 font-semibold">Manage community funds, top up balance, and withdraw money.</p>
                 </div>
             </div>
 
@@ -117,12 +114,14 @@ export default function WalletPage() {
                         >
                             Top Up
                         </button>
-                        <button 
-                            onClick={() => setShowWithdrawModal(true)}
-                            className="flex-1 py-2.5 border border-white/20 text-white rounded-xl text-xs font-bold hover:bg-white/10 transition shadow-sm cursor-pointer"
-                        >
-                            Withdraw
-                        </button>
+                        {role === 'admin' && (
+                            <button 
+                                onClick={() => setShowWithdrawModal(true)}
+                                className="flex-1 py-2.5 border border-white/20 text-white rounded-xl text-xs font-bold hover:bg-white/10 transition shadow-sm cursor-pointer"
+                            >
+                                Withdraw
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

@@ -24,13 +24,34 @@ function CommunityLayoutContent({ children }: { children: React.ReactNode }) {
     const [userRole, setUserRole] = useState<string>('member');
     const [user, setUser] = useState<{ name: string; email: string } | null>(null);
     const [showUserPopover, setShowUserPopover] = useState(false);
-    const [profileForm, setProfileForm] = useState({
+    const [profileForm, setProfileForm] = useState<{
+        username: string;
+        name: string;
+        email: string;
+        phone: string;
+        bio: string;
+        avatarUrl?: string;
+    }>({
         username: 'unimus70bringin799708',
         name: 'unimus70bringin',
         email: 'unimus70bringin@gmail.com',
         phone: 'Not added',
         bio: ''
     });
+
+    useEffect(() => {
+        const handleStorageChange = () => {
+            const storedProfile = localStorage.getItem('kyklos_user_profile');
+            if (storedProfile) {
+                try {
+                    setProfileForm(JSON.parse(storedProfile));
+                } catch {}
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
 
     useEffect(() => {
         const activeSlug = localStorage.getItem('kyklos_active_community_slug') || 'keluarga-cemara';
@@ -145,15 +166,6 @@ function CommunityLayoutContent({ children }: { children: React.ReactNode }) {
             )
         },
         { 
-            href: '/wallet', 
-            label: 'Wallet', 
-            icon: (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
-            )
-        },
-        { 
             href: '/events', 
             label: 'Events', 
             icon: (
@@ -188,9 +200,17 @@ function CommunityLayoutContent({ children }: { children: React.ReactNode }) {
                         onClick={() => setShowUserPopover(!showUserPopover)} 
                         className="flex items-center gap-3 cursor-pointer focus:outline-none select-none"
                     >
-                        <div className="w-8 h-8 rounded-full bg-primary hover:scale-105 active:scale-95 transition flex items-center justify-center text-white text-xs font-bold border border-orange-100 shadow-sm object-cover select-none">
-                            {profileForm.name ? profileForm.name[0].toUpperCase() : 'U'}
-                        </div>
+                        {profileForm.avatarUrl ? (
+                            <img
+                                src={profileForm.avatarUrl}
+                                alt={profileForm.name}
+                                className="w-8 h-8 rounded-full object-cover border border-orange-100 shadow-sm hover:scale-105 active:scale-95 transition select-none"
+                            />
+                        ) : (
+                            <div className="w-8 h-8 rounded-full bg-primary hover:scale-105 active:scale-95 transition flex items-center justify-center text-white text-xs font-bold border border-orange-100 shadow-sm select-none">
+                                {profileForm.name ? profileForm.name[0].toUpperCase() : 'U'}
+                            </div>
+                        )}
                     </button>
                     {showUserPopover && (
                         <>
@@ -198,9 +218,17 @@ function CommunityLayoutContent({ children }: { children: React.ReactNode }) {
                             <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-200/80 rounded-2xl shadow-xl p-4 z-30 animate-scale-up text-left space-y-3">
                                 {/* Header: Profil */}
                                 <div className="flex items-center gap-3 pb-2.5 border-b border-slate-100">
-                                    <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold border border-orange-100 shadow-sm object-cover select-none">
-                                        {profileForm.name ? profileForm.name[0].toUpperCase() : 'U'}
-                                    </div>
+                                    {profileForm.avatarUrl ? (
+                                        <img
+                                            src={profileForm.avatarUrl}
+                                            alt={profileForm.name}
+                                            className="w-9 h-9 rounded-full object-cover border border-orange-100 shadow-sm select-none"
+                                        />
+                                    ) : (
+                                        <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold border border-orange-100 shadow-sm select-none">
+                                            {profileForm.name ? profileForm.name[0].toUpperCase() : 'U'}
+                                        </div>
+                                    )}
                                     <div className="min-w-0 flex-1">
                                         <div className="text-xs font-bold text-slate-900 truncate">
                                             {profileForm.name}
@@ -251,30 +279,10 @@ function CommunityLayoutContent({ children }: { children: React.ReactNode }) {
                 {/* Sidebar Kiri - Hanya Muncul di Layar Desktop (md ke atas) */}
                 <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200/80 h-[calc(100vh-56px)] sticky top-[56px] flex-shrink-0">
                     {/* Logo Brand / Header (Kyklos Community) */}
-                    <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
-                        {/* Lingkaran Logo */}
-                        <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center">
-                            <div className="w-3.5 h-3.5 rounded-full bg-primary flex items-center justify-center">
-                                <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <Link href="/dashboard" className="block select-none">
-                                <h2 className="font-serif font-bold text-slate-800 tracking-tight leading-tight text-[15px]">{community.name}</h2>
-                                <div className="mt-1">
-                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${userRole === 'admin' ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-500'}`}>
-                                        {userRole === 'admin' ? 'Admin' : 'Member'}
-                                    </span>
-                                </div>
-                            </Link>
-                        </div>
-                    </div>
-
-                    {/* Create Event Button */}
-                    <div className="px-4 pt-4">
-                        <Link href="/dashboard" className="w-full py-2.5 bg-primary text-white rounded-xl text-xs font-bold shadow-sm hover:brightness-90 hover:shadow-md transition flex items-center justify-center">
-                            Back to Dashboard
-                        </Link>
+                    <div className="px-6 py-4 border-b border-gray-100">
+                        <span className={`inline-block text-[9px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${userRole === 'admin' ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-500'}`}>
+                            {userRole === 'admin' ? 'Admin' : 'Member'}
+                        </span>
                     </div>
 
                     {/* Menu Navigasi Sidebar */}
@@ -339,17 +347,11 @@ function CommunityLayoutContent({ children }: { children: React.ReactNode }) {
                     {/* Header Seluler (md-hidden) - Menampilkan navigasi tab atas seperti sebelumnya */}
                     <header className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm md:hidden flex-shrink-0">
                         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-8.5 h-8.5 rounded-xl flex items-center justify-center text-white text-sm font-black shadow-sm"
-                                    style={{ backgroundColor: community.themeColor }}>
-                                    {community.name[0]}
-                                </div>
-                                <div className="min-w-0">
-                                    <span className="font-serif font-black text-slate-900 text-[13px] block tracking-tight truncate leading-none">{community.name}</span>
-                                    <span className={`inline-block mt-1 text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${userRole === 'admin' ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-500'}`}>
-                                        {userRole === 'admin' ? 'Admin' : 'Member'}
-                                    </span>
-                                </div>
+                            <div className="min-w-0">
+                                <span className="font-serif font-black text-slate-900 text-[13px] block tracking-tight truncate leading-none">{community.name}</span>
+                                <span className={`inline-block mt-1 text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${userRole === 'admin' ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-500'}`}>
+                                    {userRole === 'admin' ? 'Admin' : 'Member'}
+                                </span>
                             </div>
                             <div className="flex items-center gap-3">
                                 <div className="relative">
@@ -358,9 +360,17 @@ function CommunityLayoutContent({ children }: { children: React.ReactNode }) {
                                         className="focus:outline-none cursor-pointer select-none"
                                         title="Menu Pengguna"
                                     >
-                                        <div className="w-8.5 h-8.5 rounded-full bg-primary hover:scale-105 active:scale-95 transition flex items-center justify-center text-white text-[11px] font-black border-2 border-white shadow-md object-cover select-none">
-                                            {profileForm.name ? profileForm.name[0].toUpperCase() : 'U'}
-                                        </div>
+                                        {profileForm.avatarUrl ? (
+                                            <img
+                                                src={profileForm.avatarUrl}
+                                                alt={profileForm.name}
+                                                className="w-8.5 h-8.5 rounded-full object-cover border-2 border-white shadow-md hover:scale-105 active:scale-95 transition select-none"
+                                            />
+                                        ) : (
+                                            <div className="w-8.5 h-8.5 rounded-full bg-primary hover:scale-105 active:scale-95 transition flex items-center justify-center text-white text-[11px] font-black border-2 border-white shadow-md select-none">
+                                                {profileForm.name ? profileForm.name[0].toUpperCase() : 'U'}
+                                            </div>
+                                        )}
                                     </button>
                                     {showUserPopover && (
                                         <>
@@ -368,9 +378,17 @@ function CommunityLayoutContent({ children }: { children: React.ReactNode }) {
                                             <div className="absolute right-0 mt-2.5 w-52 bg-white border border-slate-200/80 rounded-2xl shadow-xl p-3.5 z-30 animate-scale-up text-left space-y-3">
                                                 {/* Header: Profil */}
                                                 <div className="flex items-center gap-2.5 pb-2.5 border-b border-slate-100">
-                                                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-[10px] font-black border border-orange-100 shadow-sm object-cover select-none">
-                                                        {profileForm.name ? profileForm.name[0].toUpperCase() : 'U'}
-                                                    </div>
+                                                    {profileForm.avatarUrl ? (
+                                                        <img
+                                                            src={profileForm.avatarUrl}
+                                                            alt={profileForm.name}
+                                                            className="w-8 h-8 rounded-full object-cover border border-orange-100 shadow-sm select-none"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-[10px] font-black border border-orange-100 shadow-sm select-none">
+                                                            {profileForm.name ? profileForm.name[0].toUpperCase() : 'U'}
+                                                        </div>
+                                                    )}
                                                     <div className="min-w-0 flex-1">
                                                         <div className="text-[11px] font-black text-slate-900 truncate leading-none">
                                                             {profileForm.name}

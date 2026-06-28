@@ -27,30 +27,25 @@ export class WalletService {
     });
   }
 
-  // Buat Snap token top up — pakai server key dari env langsung (1 akun Midtrans)
+  // Buat TopUp langsung sukses — simulasi bank asli tanpa Midtrans
   async createTopUp(userId: string, amount: number) {
     if (amount < 10000) throw new BadRequestException('Minimal top up Rp10.000');
 
-    const serverKey = process.env.MIDTRANS_SERVER_KEY;
-    const clientKey = process.env.MIDTRANS_CLIENT_KEY;
-    if (!serverKey) throw new BadRequestException('Midtrans belum dikonfigurasi');
-
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
     const orderId = `topup-${userId.slice(0, 8)}-${Date.now()}`;
 
-    const snap = new MidtransClient.Snap({ isProduction: false, serverKey, clientKey });
-    const token = await snap.createTransactionToken({
-      transaction_details: { order_id: orderId, gross_amount: amount },
-      customer_details: { first_name: user?.name ?? 'User', email: user?.email },
-      item_details: [{ id: 'topup', name: 'Top Up Saldo Kyklos', price: amount, quantity: 1 }],
-    });
+    const [topUp] = await this.prisma.$transaction([
+      this.prisma.topUp.create({
+        data: { userId, amount: BigInt(amount), orderId, snapToken: '', status: 'paid' },
+      }),
+      this.prisma.userBalance.upsert({
+        where: { userId },
+        create: { userId, balance: BigInt(amount) },
+        update: { balance: { increment: BigInt(amount) } },
+      }),
+    ]);
 
-    const topUp = await this.prisma.topUp.create({
-      data: { userId, amount: BigInt(amount), orderId, snapToken: token, status: 'pending' },
-    });
-
-    this.logger.log(`TopUp created: user=${userId} amount=${amount} orderId=${orderId}`);
-    return { token, clientKey, topUpId: topUp.id };
+    this.logger.log(`TopUp success (Simulated): user=${userId} amount=${amount} orderId=${orderId}`);
+    return { token: null, clientKey: null, topUpId: topUp.id };
   }
 
   // Webhook Midtrans untuk top up
