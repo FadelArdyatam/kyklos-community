@@ -19,10 +19,26 @@ export default function PocketsPage() {
     const router = useRouter();
     const [slug, setSlug] = useState<string>('keluarga-cemara');
     const [communityId, setCommunityId] = useState<string>('');
+    const [communityName, setCommunityName] = useState<string>('Kyklos');
     const [pockets, setPockets] = useState<Pocket[]>([]);
     const [loading, setLoading] = useState(true);
 
     const { role } = useContext(CommunityContext);
+
+    const getPocketVA = (p: Pocket) => {
+        let hash = 0;
+        for (let i = 0; i < p.id.length; i++) {
+            hash = p.id.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const val = Math.abs(hash).toString().padEnd(8, '7').slice(0, 8);
+        return `8802-${val.slice(0, 4)}-${val.slice(4, 8)}`;
+    };
+
+    const getPocketVAName = (cName: string, pName: string) => {
+        const cleanCommunity = cName.slice(0, 15).toUpperCase();
+        const cleanPocket = pName.slice(0, 10).toUpperCase();
+        return `KYK*${cleanCommunity}*${cleanPocket}`;
+    };
 
     const [showNewPocketModal, setShowNewPocketModal] = useState(false);
     const [showTransactionModal, setShowTransactionModal] = useState<{
@@ -75,6 +91,7 @@ export default function PocketsPage() {
                 return;
             }
             setCommunityId(c.id);
+            setCommunityName(c.name);
 
             // Fetch payment config to check bank account details
             api.get<any>(`/communities/${c.id}/payment-config`)
@@ -401,6 +418,13 @@ export default function PocketsPage() {
                                     <p className={`font-serif text-2xl font-black ${theme.accent} tracking-tight mt-0.5`}>{idr(p.balance)}</p>
                                 </div>
 
+                                {/* Whitelabel Virtual Account */}
+                                <div className="relative z-10 bg-black/15 border border-white/10 rounded-xl px-3 py-2 text-[10px] text-white/80 space-y-0.5">
+                                    <p className="font-bold text-white/40 uppercase tracking-widest text-[7.5px]">Virtual Account Nobu (Whitelabel)</p>
+                                    <p className="font-mono font-bold tracking-wider text-[11px] text-white">{getPocketVA(p)}</p>
+                                    <p className="truncate text-white/50 text-[8.5px] font-semibold">{getPocketVAName(communityName, p.name)}</p>
+                                </div>
+
                                 {/* Admin Action Buttons */}
                                 {role === 'admin' && (
                                     <div className="flex flex-col gap-2 mt-auto relative z-10">
@@ -460,10 +484,10 @@ export default function PocketsPage() {
                             onChange={e => setNewPocketForm({ ...newPocketForm, type: e.target.value })}
                             className="w-full border border-slate-300 rounded-xl px-3.5 py-3 text-sm bg-white focus:outline-none focus:border-primary"
                         >
-                            <option value="KAS">🏦 Kas Umum</option>
-                            <option value="ARISAN">🔄 Arisan</option>
-                            <option value="PATUNGAN">🚨 Darurat / Sosial (Patungan)</option>
-                            <option value="IURAN">🎫 Iuran Rutin</option>
+                            <option value="KAS">Kas Umum</option>
+                            <option value="ARISAN">Arisan</option>
+                            <option value="PATUNGAN">Darurat / Sosial (Patungan)</option>
+                            <option value="IURAN">Iuran Rutin</option>
                         </select>
                         <input
                             type="text" value={newPocketForm.description}
@@ -524,6 +548,19 @@ export default function PocketsPage() {
                                 </div>
                             ) : (
                                 <>
+                                    {showTransactionModal.type === 'deposit' && (() => {
+                                        const targetPocket = pockets.find(p => p.id === showTransactionModal.pocketId);
+                                        if (!targetPocket) return null;
+                                        return (
+                                            <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-3.5 text-xs text-slate-600 space-y-1">
+                                                <p className="font-bold text-slate-400 uppercase tracking-wider text-[8px]">Tujuan Transfer Virtual Account (Whitelabel Nobu):</p>
+                                                <p className="font-mono font-bold text-slate-800 text-sm tracking-wider">{getPocketVA(targetPocket)}</p>
+                                                <p className="font-semibold text-slate-700 text-[10px]">{getPocketVAName(communityName, targetPocket.name)}</p>
+                                                <p className="text-[9px] text-slate-400 font-medium leading-relaxed mt-1">Sistem whitelabel auto-routing akan langsung menyalurkan dana Anda ke pocket ini.</p>
+                                            </div>
+                                        );
+                                    })()}
+
                                     {isDisburse && hasBank && (
                                         <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs text-slate-600 space-y-1">
                                             <p className="font-bold text-slate-700">Tujuan Transfer Bank Komunitas:</p>
@@ -624,6 +661,21 @@ export default function PocketsPage() {
                                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total Dana Terkumpul</span>
                                 <p className="font-serif text-3xl font-black text-[#0B1E26] tracking-tight mt-1">{idr(selectedPocket.balance)}</p>
                             </div>
+                        </div>
+
+                        {/* Whitelabel Bank Routing Card */}
+                        <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-4 space-y-2 flex-shrink-0">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Virtual Account Khusus Kantong (Whitelabel Nobu)</span>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="font-mono text-sm font-black text-slate-800 tracking-wider">{getPocketVA(selectedPocket)}</p>
+                                    <p className="text-[10px] font-bold text-slate-500 mt-0.5">{getPocketVAName(communityName, selectedPocket.name)}</p>
+                                </div>
+                                <span className="text-[9px] font-extrabold px-2 py-0.5 bg-sky-50 text-sky-700 rounded border border-sky-100 uppercase tracking-wider">Nobu Route</span>
+                            </div>
+                            <p className="text-[9.5px] text-slate-400 font-medium leading-relaxed">
+                                Setiap dana yang ditransfer ke VA ini akan otomatis didepositkan langsung ke kantong <strong>{selectedPocket.name}</strong>.
+                            </p>
                         </div>
 
                         {/* Transactions Section */}
