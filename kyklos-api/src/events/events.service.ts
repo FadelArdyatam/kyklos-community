@@ -42,10 +42,11 @@ export class EventsService {
 
   create(communityId: string, createdById: string, data: any) {
     this.logger.log(`Creating event "${data.title}" in community ${communityId}`);
-    const { price, ...rest } = data;
+    const { price, date, eventDate, ...rest } = data;
     return this.prisma.event.create({
       data: {
         communityId, createdById, ...rest,
+        eventDate: eventDate ?? (date ? new Date(date) : null),
         price: price != null ? BigInt(price) : null,
       },
     });
@@ -53,10 +54,14 @@ export class EventsService {
 
   update(id: string, data: any) {
     this.logger.log(`Updating event ${id}`);
-    const { price, ...rest } = data;
+    const { price, date, eventDate, ...rest } = data;
     return this.prisma.event.update({
       where: { id },
-      data: { ...rest, ...(price != null ? { price: BigInt(price) } : {}) },
+      data: {
+        ...rest,
+        ...(eventDate ?? date ? { eventDate: eventDate ?? new Date(date) } : {}),
+        ...(price != null ? { price: BigInt(price) } : {}),
+      },
     });
   }
 
